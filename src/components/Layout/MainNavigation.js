@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import AuthContext from "../../store/auth-context";
 import classes from './MainNavigation.module.css';
-import { useContext } from "react";
+import { useCallback, useContext, useEffect } from 'react';
 
 const MainNavigation = () => {
 
@@ -9,9 +9,45 @@ const MainNavigation = () => {
 
   const isLoggedIn = authCtx.isLoggedIn;
 
-  const logoutHandler = () => {
-    authCtx.logout();
+  const inactivityTimeout = 5 * 60 * 1000; // 5 minutes
+  let timer;
+
+  const resetTimer = () => {
+    clearTimeout(timer);
+    timer = setTimeout(logoutUser, inactivityTimeout);
   };
+
+  const logoutUser = () => {
+    authCtx.logout();
+  
+   // localStorage.removeItem('token'); check if needed
+    //alert('Log out Succesfull')
+    // Clear user session (e.g., remove tokens, clear local storage)
+    // Redirect to the login page or perform any other necessary actions
+    // Display a logout notification if needed
+  };
+
+  const logoutHandler = () => {
+    // Perform manual logout when the user clicks the logout button
+    clearTimeout(timer); // Clear the auto logout timer
+    logoutUser();
+  };
+
+  useEffect(() => {
+    // Set up event listeners to reset the timer on user activity
+    window.addEventListener('mousemove', resetTimer);
+    window.addEventListener('keydown', resetTimer);
+
+    // Initialize the timer
+    resetTimer();
+
+    // Clean up the event listeners and timer on component unmount
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('mousemove', resetTimer);
+      window.removeEventListener('keydown', resetTimer);
+    };
+  }, [resetTimer, timer]);
 
   return (
     <header className={classes.header}>
